@@ -139,3 +139,157 @@ Q1. Using what you learned in this section, try to deobfuscate 'secret.js' in or
 - Paste the code and deobfuscate
 - Answer is in the variable 'flag'
 - Answer is: HTB{1_4m_7h3_53r14l_g3n3r470r!}
+
+## Code Analysis
+### Notes
+JS Code
+  'use strict';
+  function generateSerial() {
+    ...SNIP...
+    var xhr = new XMLHttpRequest;
+    var url = "/serial.php";
+    xhr.open("POST", url, true);
+    xhr.send(null);
+  };
+
+HTTP Requests Analysis
+- Code Variables:
+  - A variable xhr is defined to create an XMLHttpRequest object.
+    - This object is used in JavaScript to handle web requests.
+  - A second variable URL is set to /serial.php, implying the file exists on the same domain (no domain specified).
+- Code Functions:
+  - The function calls xhr.open("POST", URL) to set up a POST request.
+  - It then uses xhr.send() to send the request, with no POST data included and no data expected in return.
+
+Function Purpose & Developer Intent
+- The generateSerial function likely exists to send a POST request to generate a serial.
+- It may be tied to a future feature (e.g., a "Generate Serial" button) not yet implemented in the HTML.
+
+Security & Testing Implications
+- Through code deobfuscation and analysis, this hidden function was uncovered.
+- By replicating the request manually, it may be possible to:
+  - Test if the function is handled on the server-side.
+  - Discover unreleased features.
+  - Possibly find bugs or vulnerabilities.
+
+## HTTP Requests
+### Notes
+cURL
+- A CMD command
+- Can request any website by simply providing its URL, and we would get it in text-format
+  - The HTML, CSS and JS
+- E.g. curl http://SERVER_IP:PORT/
+
+POST Request
+- To send a POST request, add the -X POST flag to the command
+  - "-s" flag to reduce cluttering the response with unnecessary data
+  - curl -s http://SERVER_IP:PORT/ -X POST
+- POST request usually contains POST data. To send data, we can use the "-d "param1=sample"" flag and include the data for each parameter
+  - curl -s http://SERVER_IP:PORT/ -X POST -d "param1=sample"
+
+### Walkthrough
+Q1. Try applying what you learned in this section by sending a 'POST' request to '/serial.php'. What is the response you get?
+- Open PowerShell
+- Run the POST command
+  - curl -s http://SERVER_IP:PORT/serial.php -X POST
+    - /serial.php was part of the main domain of Serial Generator, a subdomain
+- Answer is: N2gxNV8xNV9hX3MzY3IzN19tMzU1NGcz
+
+## Decoding
+### Notes
+What if?
+- http://SERVER_IP:PORT/serial.php -X POST -d "param1=sample"
+- But CMD replies with: ZG8gdGhlIGV4ZXJjaXNlLCBkb24ndCBjb3B5IGFuZCBwYXN0ZSA7KQo=
+
+Explanation
+- Obfuscation can be taken further using advanced techniques to make code harder to read and detect.
+- These techniques often involve encoding parts of the code as text blocks that are decoded during execution.
+- Such encoded blocks are commonly found in obfuscated code used to evade detection.
+- Three common text encoding methods used in obfuscation are: Base64, Hex, ROT13
+
+Base64
+- This encoding reduces the use of special characters by representing data in:
+  - Alphanumeric characters (A–Z, a–z, 0–9)
+  - Two symbols: + and /
+- It can encode any input, including binary data, into this restricted character set.
+
+Spotting Base64
+- Typically easy to recognize because:
+  - They contain only alphanumeric characters, plus + and /.
+  - They often end with = padding characters, used to make the total length a multiple of 4.
+    - Example: If the output is 3 characters, 1 = is added.
+    - If the output is 2 characters, 2 = are added.
+
+Base64 Encode
+- To encode any text into base64 in Linux, echo it and pipe it with '|' to base64: echo https://www.hackthebox.eu/ | base64
+  - aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K
+
+Base64 Decode
+- To decode any base64 encoded string, use base64 -d: echo aHR0cHM6Ly93d3cuaGFja3RoZWJveC5ldS8K | base64 -d
+  - https://www.hackthebox.eu/
+
+Hex
+- Converts each character into its hexadecimal (base-16) representation based on the ASCII table.
+  - E.g. 'a' → 61, 'b' → 62, 'c' → 63
+- View the ASCII table on Linux using: man ascii
+
+Spotting Hex
+- Easy to recognize because:
+  - They consist only of hexadecimal characters: 0–9 and a–f.
+  - Their uniform character set makes them visually distinct, like base64.
+
+Hex Encode
+- To encode any string into hex in Linux, use the xxd -p: echo https://www.hackthebox.eu/ | xxd -p
+  - 68747470733a2f2f7777772e6861636b746865626f782e65752f0a
+
+Hex Decode
+- To decode a hex encoded string, use the xxd -p -r: echo 68747470733a2f2f7777772e6861636b746865626f782e65752f0a | xxd -p -r
+  - https://www.hackthebox.eu/
+
+Caesar
+- An ancient encoding technique where each letter is shifted by a fixed number of positions in the alphabet.
+- E.g. With a shift of 1: 'a' → 'b', 'b' → 'c', etc.
+- Variations use different shift values.
+  - Rot13
+    - The most common Caesar cipher variant.
+    - Shifts letters 13 positions forward.
+    - It's reversible by applying the same operation again.
+
+Spotting Caesar/Rot13
+- Encoded text may look random, but:
+  - Each character is predictably mapped, maintaining structure.
+  - E.g: http://www becomes uggc://jjj in Rot13.
+  - Familiar patterns (like ://) may still hint at the original content.
+
+Rot13 Encode
+- No specific command, but can create own command to do the character shifting: echo https://www.hackthebox.eu/ | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+  - uggcf://jjj.unpxgurobk.rh/
+
+Rot13 Decode
+- Can use the same previous command to decode Rot13: echo uggcf://jjj.unpxgurobk.rh/ | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+  - https://www.hackthebox.eu/
+
+Other Types of Encoding
+- Numerous Encoding Methods:
+  - There are hundreds of encoding techniques.
+  - Experience may be required to recognize and decode less common ones.
+- Identifying Unknown Encodings:
+  - First, try to identify the encoding type.
+  - Then use online decoding tools to interpret the data.
+- Helpful Tool:
+  - Tools like Cipher Identifier can automatically detect the encoding type.
+    - https://www.boxentriq.com/code-breaking/cipher-identifier
+  - Can test encoded strings using it to identify the method used.
+- Obfuscation via Encryption:
+  - Some obfuscation tools go further and use encryption (not just encoding).
+  - Encryption uses a key, making it much harder to reverse-engineer.
+  - If the decryption key isn’t embedded in the script, the code becomes very difficult to deobfuscate.
+
+### Walkthrough
+Q1. Using what you learned in this section, determine the type of encoding used in the string you got at previous exercise, and decode it. To get the flag, you can send a 'POST' request to 'serial.php', and set the data as "serial=YOUR_DECODED_OUTPUT".
+- Open Cipher Identifier (https://www.boxentriq.com/code-breaking/cipher-identifier) and identify the encoder of the answer from previous section
+- Decode the previous answer using Base64
+  - echo N2gxNV8xNV9hX3MzY3IzN19tMzU1NGcz | base64 -d
+- Copy the reply and run the POST request again on /serial.php
+  - curl -s http://SERVER_IP:PORT/serial.php -X POST -d "serial=7h15_15_a_s3cr37_m3554g3" 
+- Answer is: HTB{ju57_4n07h3r_r4nd0m_53r14l}
