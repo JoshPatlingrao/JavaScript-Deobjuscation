@@ -1,4 +1,4 @@
-# JavaScript-Deobjuscation
+# JavaScript-Deobfuscation
 
 ## Source Code
 ### Notes
