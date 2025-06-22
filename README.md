@@ -86,3 +86,20 @@ Packing
 
 ## Advanced Obfuscation
 ### Notes
+- Basic obfuscation still contains cleartext strings.
+- Visible strings may reveal the original functionality of the code.
+- Advanced obfuscation tools aim to completely hide the code’s purpose, including removing or disguising any cleartext elements.
+
+Obfuscator
+- Online Tool: https://obfuscator.io/
+- More obfuscated, and can't see any remnants of our original code
+  - Used String Array Encoding: Base64, as example
+
+More Obfuscation
+- Can obfuscate JavaScript code using tools like JSF and then rerun it to test functionality.
+  - Link: http://www.jsfuck.com/
+- Obfuscated code may take longer to run, highlighting how obfuscation can negatively affect performance.
+- Other obfuscators: JJ Encode (https://utf-8.jp/public/jjencode.html) or AA Encode (https://utf-8.jp/public/aaencode.html)
+  - Can make execution or compilation extremely slow, so they are generally not recommended unless there's a specific reason, such as:
+    - Bypassing web filters
+    - Evading restrictions
